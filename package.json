@@ -3,7 +3,9 @@
     "version": "0.1.0",
     "description": "Use vosk in command line.",
     "keywords": [
-        "vosk"
+        "vosk",
+        "speech",
+        "recognition"
     ],
     "author": "JacobLinCool <jacoblincool@gmail.com> (https://github.com/JacobLinCool)",
     "license": "MIT",

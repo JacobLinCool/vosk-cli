@@ -1,17 +1,27 @@
+import EventEmitter from "node:events";
 import mic from "mic";
-import vosk from "vosk-lib";
-import ora from "ora";
+import vosk, { Model } from "vosk-lib";
+import ora, { Ora } from "ora";
 
-export function microphone(model_root: string): Promise<void> {
-    const spinner = ora("Initializing").start();
+export class Microphone extends EventEmitter {
+    private model: Model;
+    private mic?: mic;
+    private spinner?: Ora;
 
-    return new Promise((resolve) => {
-        const instance = mic();
-        const stream = instance.getAudioStream();
-
+    constructor(model_root: string) {
+        super();
         vosk.setLogLevel(-1);
-        const model = new vosk.Model(model_root);
-        const rec = new vosk.Recognizer({ model, sampleRate: 16000 });
+        this.model = new vosk.Model(model_root);
+    }
+
+    start(): void {
+        this.spinner = ora("Initializing").start();
+        const spinner = this.spinner || ora();
+
+        this.mic = mic();
+        const stream = this.mic.getAudioStream();
+
+        const rec = new vosk.Recognizer({ model: this.model, sampleRate: 16000 });
         rec.setMaxAlternatives(1);
         rec.setWords(true);
         rec.setPartialWords(true);
@@ -24,6 +34,7 @@ export function microphone(model_root: string): Promise<void> {
                 const sentence = result.alternatives[0].text;
                 if (sentence) {
                     spinner.info(sentence).start("Listening");
+                    this.emit("sentence", sentence);
                 }
             } else {
                 const result = rec.partialResult();
@@ -39,17 +50,16 @@ export function microphone(model_root: string): Promise<void> {
             const sentence = result.alternatives[0].text;
             if (sentence) {
                 spinner.info(sentence).succeed("Done");
+                this.emit("sentence", sentence);
             }
             rec.free();
-            model.free();
-            resolve();
         });
 
-        process.on("SIGINT", () => {
-            spinner.stop();
-            instance.stop();
-        });
+        this.mic.start();
+    }
 
-        instance.start();
-    });
+    stop(): void {
+        this.spinner?.stop();
+        this.mic?.stop();
+    }
 }

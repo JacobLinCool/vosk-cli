@@ -11,7 +11,7 @@ export const PACKAGE_JSON = JSON.parse(
     [key: string]: unknown;
 };
 
-export const MODEL_DIR = path.join(os.homedir(), "vosk-models");
+export const MODEL_DIR = process.env.MODEL_DIR || path.join(os.homedir(), "vosk-models");
 if (!fs.existsSync(MODEL_DIR)) {
     fs.mkdirSync(MODEL_DIR, { recursive: true });
 }

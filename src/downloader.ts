@@ -102,23 +102,27 @@ export class ModelDownloader extends EventEmitter {
         });
     }
 
-    public async install(): Promise<void> {
-        const zip = path.join(MODEL_DIR, this.name + ".zip");
+    public async install(from?: string): Promise<void> {
+        const zip = from || path.join(MODEL_DIR, this.name + ".zip");
         const dir = path.join(MODEL_DIR, this.name);
 
-        try {
-            await this.download(zip);
-            this.log(`Downloaded ${this.name}`);
-        } catch (err) {
-            this.error(`Failed to download ${this.name}`);
-            this.error(err);
-            return;
+        if (!from) {
+            try {
+                await this.download(zip);
+                this.log(`Downloaded ${this.name}`);
+            } catch (err) {
+                this.error(`Failed to download ${this.name}`);
+                this.error(err);
+                return;
+            }
         }
 
         try {
             await this.unzip(zip, dir);
             this.log(`Unzipped ${this.name}`);
-            fs.unlinkSync(zip);
+            if (!from) {
+                fs.unlinkSync(zip);
+            }
         } catch (err) {
             this.error(`Failed to unzip ${this.name}`);
             this.error(err);
